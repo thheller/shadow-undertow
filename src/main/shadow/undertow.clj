@@ -15,7 +15,7 @@
            (java.security KeyStore)
            [org.xnio ChannelListener Xnio OptionMap]
            [java.nio.channels ClosedChannelException]
-           [io.undertow.util AttachmentKey MimeMappings Headers HeaderMap HttpString]
+           [io.undertow.util AttachmentKey MimeMappings Headers HeaderMap HeaderValues HttpString]
            [io.undertow.server ResponseCommitListener]
            [io.undertow.server.handlers.resource PathResourceManager ClassPathResourceManager]
            [io.undertow.predicate Predicates Predicate]
@@ -63,12 +63,15 @@
   (and x (instance? HttpHandler x)))
 
 (defn unset-secure-cookie [^HeaderMap headers]
-  (when-let [cookie (.get headers "set-cookie" 0)]
-    (as-> cookie $
-          (str/split $ #";")
-          (remove #(some? (re-matches #"\s*Secure\s*" %)) $)
-          (str/join ";" $)
-          (.put headers (HttpString. "set-cookie") $))))
+  (when-let [^HeaderValues cookies (.get headers "set-cookie")]
+    (->> (.iterator cookies)
+         (iterator-seq)
+         (map (fn [cookie]
+                (as-> cookie $
+                      (str/split $ #";")
+                      (remove #(some? (re-matches #"\s*Secure\s*" %)) $)
+                      (str/join ";" $))))
+         (.putAll headers (HttpString. "set-cookie")))))
 
 (declare build)
 
