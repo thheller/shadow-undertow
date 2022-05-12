@@ -180,11 +180,11 @@
         (reify
           HttpHandler
           (handleRequest [_ ex]
-            (-> ex
-                (.getResponseHeaders)
+            (let [ex-hdrs (.getResponseHeaders ex)]
+              (when-not (.contains ex-hdrs Headers/CACHE_CONTROL)
                 ;; minimal caching headers that force the browser the revalidate
                 ;; undertow will respond with 304 Not Modified checking If-Modified-Since
-                (.add Headers/CACHE_CONTROL "private, no-cache"))
+                (.add ex-hdrs Headers/CACHE_CONTROL "private, no-cache")))
             (.handleRequest ^HttpHandler next ex)))]
     (assoc state :handler handler)))
 
