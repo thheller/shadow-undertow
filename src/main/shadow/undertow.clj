@@ -104,6 +104,23 @@
             (.handleRequest ^HttpHandler upgrade-handler x)
             (.handleRequest ^HttpHandler req-handler x)))))))
 
+(defn set-welcome-files [^ShadowResourceHandler rc {:keys [use-index-files] :as props}]
+  (.setWelcomeFiles rc
+    (into-array String
+      (cond
+        (nil? use-index-files)
+        []
+        (false? use-index-files)
+        []
+        (true? use-index-files)
+        ["index.html"]
+        (and (vector? use-index-files) (every? string? use-index-files))
+        use-index-files
+        :else
+        (throw (ex-info "invalid :use-index-files value" {:props props})))))
+
+  rc)
+
 (defmethod build* ::classpath
   [{:keys [mime-mappings] :as state} [id props next :as config]]
   (when-not (and (vector? next)
@@ -128,6 +145,7 @@
 
         handler
         (doto (ShadowResourceHandler. rc-manager next)
+          (set-welcome-files props)
           (.setMimeMappings mime-mappings))]
 
     (-> state
@@ -161,6 +179,7 @@
 
         handler
         (doto (ShadowResourceHandler. rc-manager next)
+          (set-welcome-files props)
           (.setMimeMappings mime-mappings)
           (.setCachable (Predicates/falsePredicate))
           (.setAllowed (Predicates/truePredicate)))]
