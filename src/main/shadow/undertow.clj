@@ -68,9 +68,9 @@
          (iterator-seq)
          (map (fn [cookie]
                 (as-> cookie $
-                      (str/split $ #";")
-                      (remove #(some? (re-matches #"\s*Secure\s*" %)) $)
-                      (str/join ";" $))))
+                  (str/split $ #";")
+                  (remove #(some? (re-matches #"\s*Secure\s*" %)) $)
+                  (str/join ";" $))))
          (.putAll headers (HttpString. "set-cookie")))))
 
 (declare build)
@@ -188,6 +188,25 @@
         (update :managers conj rc-manager)
         (assoc :handler handler)
         )))
+
+(defmethod build* ::headers-inject [state [id {:keys [headers] :as props} next]]
+  (assert (vector? next))
+
+  (let [{next :handler :as state}
+        (build state next)
+
+        handler
+        (reify
+          HttpHandler
+          (handleRequest [_ ex]
+            (let [ex-hdrs (.getResponseHeaders ex)]
+              (doseq [[^String k ^String v] headers]
+                (let [k (HttpString. k)]
+                  (when-not (.contains ex-hdrs k)
+                    (.add ex-hdrs k v))))
+
+              (.handleRequest ^HttpHandler next ex))))]
+    (assoc state :handler handler)))
 
 (defmethod build* ::soft-cache [state [id next]]
   (assert (vector? next))
@@ -467,12 +486,12 @@
                         ws-loop
                         ([_] :closed)))
 
-                    (.close exchange)
+                  (.close exchange)
 
-                    ;; probably already closed, just in case
-                    (async/close! ws-out)
-                    (async/close! ws-in)
-                    )))))
+                  ;; probably already closed, just in case
+                  (async/close! ws-out)
+                  (async/close! ws-in)
+                  )))))
 
         ws-handler
         (-> (Handlers/websocket ws-callback)
@@ -604,8 +623,8 @@
                 (prn [:ws-echo msg])
                 (>! ws-out msg)
                 (recur)))
-            (prn [:ws-closed])
-            ))))
+          (prn [:ws-closed])
+          ))))
 
   (def x (start
            {:host "localhost"
