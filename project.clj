@@ -1,4 +1,4 @@
-(defproject thheller/shadow-undertow "0.3.1"
+(defproject thheller/shadow-undertow "0.3.2"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
 
@@ -13,7 +13,7 @@
   :dependencies
   [[org.clojure/clojure "1.11.1" :scope "provided"]
    [org.clojure/core.async "1.5.648"]
-   [io.undertow/undertow-core "2.2.4.Final"]]
+   [io.undertow/undertow-core "2.3.10.Final"]]
 
   :source-paths
   ["src/main"]
