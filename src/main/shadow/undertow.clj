@@ -402,7 +402,7 @@
             ;; dev server don't always need to validate certs
             ;; and shouldn't choke on self-signed certs
             trust-managers
-            (when (true? (:trust-invalid-certs props))
+            (when (true? (:trust-all-certs props))
               (let [tm-trust-everything
                     (reify X509TrustManager
                       (checkClientTrusted [this chain auth-type])
