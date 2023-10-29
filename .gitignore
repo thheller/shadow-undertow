@@ -3,6 +3,7 @@
 /classes
 /checkouts
 /.shadow-cljs
+/.cpcache
 profiles.clj
 pom.xml
 pom.xml.asc

@@ -10,7 +10,7 @@
            (io.undertow.server HttpHandler HttpServerExchange)
            (shadow.undertow WsTextReceiver ShadowResourceHandler)
            (io.undertow.websockets.core WebSockets)
-           (javax.net.ssl SSLContext KeyManagerFactory)
+           (javax.net.ssl SSLContext KeyManagerFactory TrustManager X509TrustManager)
            (java.io FileInputStream File)
            (java.security KeyStore)
            [org.xnio ChannelListener Xnio OptionMap]
@@ -399,8 +399,30 @@
       (let [xnio
             (Xnio/getInstance)
 
+            ;; dev server don't always need to validate certs
+            ;; and shouldn't choke on self-signed certs
+            trust-managers
+            (when (true? (:trust-invalid-certs props))
+              (let [tm-trust-everything
+                    (reify X509TrustManager
+                      (checkClientTrusted [this chain auth-type])
+                      (checkServerTrusted [this chain auth-type])
+                      (getAcceptedIssuers [this] nil))]
+                (into-array TrustManager [tm-trust-everything])))
+
+            ;; FIXME: I hope this is an actual new context
+            ;; not a globally shared default? only really want to disable
+            ;; cert checking for servers that chose to, not everything
+            ssl-context
+            (doto (SSLContext/getInstance "SSL")
+              (.init
+                nil ;; keymanager use defaults
+                trust-managers ;; nil uses defaults, otherwise trust everything
+                nil ;; securerandom use defaults
+                ))
+
             xnio-ssl
-            (UndertowXnioSsl. xnio OptionMap/EMPTY)]
+            (UndertowXnioSsl. xnio OptionMap/EMPTY ssl-context)]
 
         (.addHost proxy-client (URI. proxy-url) nil ^XnioSsl xnio-ssl)))
 
