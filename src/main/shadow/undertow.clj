@@ -591,6 +591,8 @@
             (.addMapping "map" "application/json")
             (.addMapping "edn" "application/edn")
             (.addMapping "wasm" "application/wasm")
+            (.addMapping "mjs" "text/javascript")
+            (.addMapping "cjs" "text/javascript")
             (.build))
 
         handler-state
